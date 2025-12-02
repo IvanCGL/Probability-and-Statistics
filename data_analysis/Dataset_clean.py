@@ -4,8 +4,8 @@ import ast
 # ==========================================
 # 1. 配置参数
 # ==========================================
-LOAD_PATH = "IMDB TMDB Movie Metadata Big Dataset (1M).csv"
-SAVE_PATH = "IMDB_Feature_Films_Cleaned.csv"
+LOAD_PATH = "../dataset/IMDB TMDB Movie Metadata Big Dataset (1M).csv"
+SAVE_PATH = "../dataset/IMDB_Feature_Films_Cleaned.csv"
 
 # 筛选标准
 START_YEAR = 1910

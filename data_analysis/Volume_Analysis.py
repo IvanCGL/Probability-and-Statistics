@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-LOAD_DIR = "IMDB TMDB Movie Metadata Big Dataset (1M).csv"
+LOAD_DIR = "../dataset/IMDB TMDB Movie Metadata Big Dataset (1M).csv"
 
 try:
     df = pd.read_csv(LOAD_DIR)

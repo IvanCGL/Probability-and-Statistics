@@ -7,7 +7,7 @@ import ast  # 关键库：用于将字符串格式的列表 "['A','B']" 转换�
 plt.style.use('seaborn-v0_8-whitegrid')
 plt.rcParams['font.sans-serif'] = ['Arial'] # 防止中文乱码（视系统而定，英文一般用Arial）
 
-LOAD_DIR = "IMDB TMDB Movie Metadata Big Dataset (1M).csv"
+LOAD_DIR = "../dataset/IMDB TMDB Movie Metadata Big Dataset (1M).csv"
 
 # ==========================================
 # 0. 数据加载与全局清洗 (Global Preprocessing)
