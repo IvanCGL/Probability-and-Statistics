@@ -5,8 +5,8 @@ import os
 # ==========================================
 # 1. 配置参数
 # ==========================================
-LOAD_PATH = "../dataset/IMDB TMDB Movie Metadata Big Dataset (1M).csv"
-SAVE_PATH = "../dataset/IMDB_Genres_Lite.csv"  # 更改文件名以示区分
+LOAD_PATH = "./dataset/IMDB TMDB Movie Metadata Big Dataset (1M).csv"
+SAVE_PATH = "./dataset/IMDB_Genres_Lite.csv"  # 更改文件名以示区分
 
 # ==========================================
 # 2. 加载与预处理

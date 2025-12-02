@@ -5,7 +5,7 @@ import seaborn as sns
 # ==========================================
 # 1. 数据加载与预处理
 # ==========================================
-LITE_PATH = "../dataset/IMDB_Genres_Lite.csv" # 确保文件名一致
+LITE_PATH = "./dataset/IMDB_Genres_Lite.csv" # 确保文件名一致
 
 print("正在加载数据...")
 try:

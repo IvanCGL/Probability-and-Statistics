@@ -5,7 +5,7 @@ import ast
 import numpy as np
 
 # 1. 加载我们在上一步生成的干净数据集
-LOAD_PATH = "../dataset/IMDB_Feature_Films_Cleaned.csv"
+LOAD_PATH = "./dataset/IMDB_Feature_Films_Cleaned.csv"
 
 print("正在加载长篇电影数据集...")
 df = pd.read_csv(LOAD_PATH)
@@ -182,7 +182,7 @@ plt.show()
 # 4. 评分趋势与幸存者偏差 (Rating Evolution)
 # ==========================================
 # 统计每年的平均分和方差
-rating_stats = df.groupby('release_year')['vote_average'].agg(['mean', 'std', 'count'])
+rating_stats = df.groupby('release_year')['AverageRating'].agg(['mean', 'std', 'count'])
 
 plt.figure(figsize=(14, 6))
 
