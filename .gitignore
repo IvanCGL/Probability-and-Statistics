@@ -9,7 +9,6 @@ config.ini
 # --------------------
 *.pyc
 *.exe
-# 忽略所有图片文件（不推荐，除非有特殊需要）
 *.png
 *.jpg
 
@@ -23,6 +22,8 @@ dist/              # 忽略编译后的输出目录
 # --------------------
 # 4. 忽略您之前提到的大文件/数据文件夹
 # --------------------
-dataset/
-result/
+dataset/*
+result/*
+!dataset/.gitkeep
+!result/.gitkeep
 *.csv              # 忽略所有 CSV 文件（如果它们都是数据文件）
