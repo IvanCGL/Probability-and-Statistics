@@ -3,37 +3,53 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import ast
 import numpy as np
+import os
 
-# 1. Load the cleaned dataset generated in the previous step
+# Set plot style
+plt.style.use('seaborn-v0_8-whitegrid')
+plt.rcParams['font.sans-serif'] = ['Arial'] 
+plt.rcParams['axes.unicode_minus'] = False
+
+# ==========================================
+# 1. Load Data
+# ==========================================
 LOAD_PATH = "./dataset/IMDB_Feature_Films_Cleaned.csv"
 
 print("Loading feature film dataset...")
+
+if not os.path.exists(LOAD_PATH):
+    print(f"[ERROR] File not found: {LOAD_PATH}")
+    print("Please run '01_Data_Prep.py' first to generate the cleaned dataset.")
+    exit(1)
+
 df = pd.read_csv(LOAD_PATH)
 
-# 2. Must fix 'genres_list' format again
-if isinstance(df['genres_list'].iloc[0], str):
+# Fix 'genres_list' format (CSV saves lists as strings)
+if not df.empty and isinstance(df['genres_list'].iloc[0], str):
     df['genres_list'] = df['genres_list'].apply(ast.literal_eval)
 
-print(f"Data loaded. Analysis sample size: {len(df)}")
+print(f"Data loaded successfully. Sample size: {len(df)}")
 
 # ==========================================
-# 1. Genre Popularity over Time
+# Chart 1: Genre Popularity over Time (Stacked Area)
 # ==========================================
+print("Generating Chart 1: Mainstream Genre Evolution...")
+
 # Explode data to count each genre
 df_exploded = df.explode('genres_list')
 
-# Create 'decade' column to reduce noise and see macro trends every 10 years
+# Create 'decade' column for macro trends
 df_exploded['decade'] = (df_exploded['release_year'] // 10) * 10
 
 # Count genre frequency per decade
 genre_trend = pd.crosstab(df_exploded['decade'], df_exploded['genres_list'])
-# Normalize: Calculate percentage (%)
+# Normalize to percentage (%)
 genre_pct = genre_trend.div(genre_trend.sum(axis=1), axis=0) * 100
 
+# Select Top 10 genres
 top_genres = df_exploded['genres_list'].value_counts().head(10).index
 
 plt.figure(figsize=(14, 7))
-# Draw Stacked Area Chart
 plt.stackplot(genre_pct.index, 
               [genre_pct[g] for g in top_genres],
               labels=top_genres, alpha=0.8)
@@ -42,52 +58,17 @@ plt.title('Evolution of Audience Preferences: Genre Market Share (Feature Films 
 plt.ylabel('Market Share (%)', fontsize=12)
 plt.xlabel('Decade', fontsize=12)
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1), title='Genre')
-plt.xlim(1920, 2020) # Focus on core decades
-plt.tight_layout()
-plt.show()
-
-# 1. Identify remaining genres (Niche Genres)
-all_genres = genre_pct.columns.tolist()
-niche_genres = [g for g in all_genres if g not in top_genres]
-
-niche_mean_share = genre_pct[niche_genres].mean().sort_values(ascending=False)
-sorted_niche_genres = niche_mean_share.index.tolist()
-
-print(f"Remaining niche genres include: {sorted_niche_genres}")
-
-# ==========================================
-# Visualization 1.1: Internal Evolution of Niche Markets (Stacked Area Chart)
-# ==========================================
-plt.figure(figsize=(14, 7))
-
-# Use a different color palette (Set2 or tab20) for distinction
-colors = sns.color_palette("tab20", len(sorted_niche_genres))
-
-plt.stackplot(genre_pct.index, 
-              [genre_pct[g] for g in sorted_niche_genres],
-              labels=sorted_niche_genres,
-              colors=colors, 
-              alpha=0.8)
-
-plt.title('Evolution of Niche Genres (The "Long Tail" Market Share)', fontsize=16)
-plt.ylabel('Market Share (%)', fontsize=12)
-plt.xlabel('Decade', fontsize=12)
 plt.xlim(1920, 2020)
-
-# Key step: Manually set Y-axis limit to fill the canvas
-# Calculate max sum of niche genres per year, add a little margin
-max_share = genre_pct[sorted_niche_genres].sum(axis=1).max()
-plt.ylim(0, max_share * 1.1) 
-
-plt.legend(loc='upper left', bbox_to_anchor=(1, 1), title='Niche Genre')
 plt.tight_layout()
 plt.show()
 
 # ==========================================
-# Visualization 1.2: The Rise and Fall of Key Historical Genres (Line Chart)
+# Chart 2: Niche & Historical Genres (Line Chart)
 # ==========================================
+print("Generating Chart 2: Historical Genre Trends...")
+
+# Define genres of interest (Westerns, War, History)
 historical_genres = ['Western', 'War', 'History', 'Music']
-# Ensure these genres exist in niche_genres or top_genres (Intersection)
 target_genres = [g for g in historical_genres if g in genre_pct.columns]
 
 plt.figure(figsize=(14, 6))
@@ -103,10 +84,9 @@ plt.legend()
 plt.grid(True, linestyle='--', alpha=0.5)
 plt.xlim(1920, 2020)
 
-# Add Annotation - This is a bonus point!
-# E.g., annotate the Golden Age of Westerns
-if 'Western' in target_genres:
-    western_peak = genre_pct['Western'].loc[1950] # Assuming 1950 is the peak
+# Annotation for Westerns
+if 'Western' in target_genres and 1950 in genre_pct.index:
+    western_peak = genre_pct['Western'].loc[1950]
     plt.annotate('Golden Age of Westerns', 
                  xy=(1950, western_peak), 
                  xytext=(1960, western_peak + 2),
@@ -115,16 +95,16 @@ if 'Western' in target_genres:
 plt.show()
 
 # ==========================================
-# 2. Hybridization Trend
+# Chart 3: Hybridization Trend (Complexity)
 # ==========================================
-# Calculate number of genre tags per movie
-df['genre_count'] = df['genres_list'].apply(len)
+print("Generating Chart 3: Genre Complexity Trend...")
 
-# Calculate average tags per year
+df['genre_count'] = df['genres_list'].apply(len)
 complexity_trend = df.groupby('release_year')['genre_count'].mean()
 
 plt.figure(figsize=(12, 5))
 plt.plot(complexity_trend.index, complexity_trend.values, color='#8e44ad', linewidth=2)
+# Smoothing curve
 plt.plot(complexity_trend.rolling(5).mean(), color='black', linewidth=1, linestyle='--')
 
 plt.title('The "Blockbuster Formula": Are Movies Becoming More Complex?', fontsize=16)
@@ -134,35 +114,31 @@ plt.grid(True, linestyle='--', alpha=0.3)
 plt.show()
 
 # ==========================================
-# 3. Budget & ROI
+# Chart 4: Budget vs. ROI (Dual Axis)
 # ==========================================
-# 1. Cleaning: Remove data with extremely low budget or revenue (usually erroneous data or micro-budget films)
-# Assuming budget < $10,000 is unreliable or not commercial release
+print("Generating Chart 4: Budget & ROI Analysis...")
+
+# Filter unreliable financial data
 df_finance = df[(df['budget'] > 10000) & (df['revenue'] > 10000)].copy()
 
-# 2. Calculate ROI (Return on Investment) = (Revenue - Budget) / Budget
+# Calculate ROI
 df_finance['roi'] = (df_finance['revenue'] - df_finance['budget']) / df_finance['budget']
-
-# 3. Calculate Median per year
-# Use median because average can be skewed by outliers like 'Avatar'
 finance_trend = df_finance.groupby('release_year')[['budget', 'revenue', 'roi']].median()
 
-# Plotting: Dual Axis Chart
 fig, ax1 = plt.subplots(figsize=(14, 7))
 
-# Left Axis: Plot Budget (Bar Chart)
+# Left Axis: Budget
 color = 'tab:blue'
 ax1.set_xlabel('Year', fontsize=12)
 ax1.set_ylabel('Median Budget (Nominal $)', color=color, fontsize=12)
 ax1.plot(finance_trend.index, finance_trend['budget'], color=color, label='Median Budget')
 ax1.tick_params(axis='y', labelcolor=color)
-ax1.set_yscale('log')
+ax1.set_yscale('log') 
 
-# Right Axis: Plot ROI (Line Chart)
+# Right Axis: ROI
 ax2 = ax1.twinx()  
 color = 'tab:red'
 ax2.set_ylabel('Median ROI (Ratio)', color=color, fontsize=12)
-# Use rolling mean to smooth ROI curve
 ax2.plot(finance_trend.index, finance_trend['roi'].rolling(5).mean(), color=color, linestyle='--', linewidth=2, label='ROI (5y Trend)')
 ax2.tick_params(axis='y', labelcolor=color)
 ax2.set_ylim(0, 10)
@@ -172,29 +148,37 @@ fig.tight_layout()
 plt.show()
 
 # ==========================================
-# 4. Rating Trends & Survivorship Bias
+# Chart 5: Rating Trends (Survivorship Bias)
 # ==========================================
-# Calculate annual average rating and standard deviation
-rating_stats = df.groupby('release_year')['AverageRating'].agg(['mean', 'std', 'count'])
+print("Generating Chart 5: Rating Trends & Survivorship Bias...")
+
+# Ensure rating col exists (using IMDB_Rating or AverageRating)
+rating_col = 'IMDB_Rating' if 'IMDB_Rating' in df.columns else 'vote_average'
+# Clean non-numeric
+df[rating_col] = pd.to_numeric(df[rating_col], errors='coerce')
+
+rating_stats = df.groupby('release_year')[rating_col].agg(['mean', 'std', 'count'])
 
 plt.figure(figsize=(14, 6))
 
-# 1. Plot Average Rating (Main Line)
+# Mean line
 plt.plot(rating_stats.index, rating_stats['mean'], color='#2c3e50', linewidth=3, label='Average Rating')
 
-# 2. Plot Standard Deviation Range (Shaded) - Show quality variance
+# Std Dev shading
 plt.fill_between(rating_stats.index, 
                  rating_stats['mean'] - rating_stats['std'], 
                  rating_stats['mean'] + rating_stats['std'], 
-                 color='gray', alpha=0.2, label='1 Std Dev (Quality Variance)')
+                 color='gray', alpha=0.2, label='1 Std Dev (Variance)')
 
-# 3. Add Auxiliary Analysis: Annual Movie Volume
+# Volume bar (Scaled)
 plt.bar(rating_stats.index, rating_stats['count'] / rating_stats['count'].max() * 2 + 4, 
         color='orange', alpha=0.3, label='Movie Volume (Scaled)')
 
 plt.title('Rating Trends: Survivorship Bias & The "Golden Age" Illusion', fontsize=16)
-plt.ylabel('IMDb Rating (0-10)', fontsize=12)
+plt.ylabel('Rating (0-10)', fontsize=12)
 plt.xlabel('Year', fontsize=12)
 plt.legend(loc='lower left')
-plt.ylim(0, 9) # Focus on rating range
+plt.ylim(0, 10)
 plt.show()
+
+print("\n✅ All visualizations generated successfully!")

@@ -3,42 +3,42 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # ==========================================
-# 1. 数据加载与预处理
+# 1. Data Loading and Preprocessing
 # ==========================================
-LITE_PATH = "./dataset/IMDB_Genres_Lite.csv" # 确保文件名一致
+# Ensure the filename matches your actual file
+LITE_PATH = "./dataset/IMDB TMDB Movie Metadata Big Dataset (1M).csv" 
 
-print("正在加载数据...")
+print("Loading data...")
 try:
     df = pd.read_csv(LITE_PATH)
 except FileNotFoundError:
-    print("找不到文件，请检查路径。")
+    print("File not found, please check the path.")
     exit()
 
-# 基础清洗
+# Basic cleaning
 df = df.dropna(subset=['runtime', 'release_year', 'genre'])
 df['release_year'] = df['release_year'].astype(int)
 df['runtime'] = pd.to_numeric(df['runtime'], errors='coerce')
 
-# 过滤时间范围 (1910 - 2025)
+# Filter date range (1910 - 2025)
 START_YEAR, END_YEAR = 1910, 2025
 df = df[(df['release_year'] >= START_YEAR) & (df['release_year'] <= END_YEAR)]
 
-# 定义短片 (<= 60分钟)
+# Define Short Films (<= 60 minutes)
 SHORT_THRESHOLD = 60
 df['is_short'] = df['runtime'] <= SHORT_THRESHOLD
 
-print(f"数据准备就绪。总行数 (标签级): {len(df)}")
+print(f"Data ready. Total rows (label-level): {len(df)}")
 
 # ==========================================
-# 图表 1: 短片崛起的趋势 (Time Trend)
-# 【关键】：必须按 ID 去重，因为这里统计的是“电影数量”，不是“标签数量”
+# Chart 1: The Trend of Rising Short Films (Time Trend)
 # ==========================================
-print("正在绘制图表 1: 短片趋势...")
+print("Plotting Chart 1: Short Film Trends...")
 
-# 按 id 去重，确保每部电影只算一次
+# Deduplicate by ID to ensure each movie is counted only once
 df_unique_movies = df.drop_duplicates(subset='id')
 
-# 计算每年的短片占比
+# Calculate the percentage of short films per year
 trend_data = df_unique_movies.groupby('release_year')['is_short'].mean() * 100
 
 plt.figure(figsize=(12, 6))
@@ -54,22 +54,22 @@ plt.grid(True, linestyle='--', alpha=0.3)
 plt.show()
 
 # ==========================================
-# 图表 2: 短片 vs 长片 题材基因对比 (Butterfly Chart)
-# 这里使用原始的 df (未去重)，因为我们要分析的是“标签”
+# Chart 2: Genre DNA Comparison: Shorts vs. Features (Butterfly Chart)
+# Using original df (not deduplicated) here because we are analyzing "tags"
 # ==========================================
-print("正在绘制图表 2: 题材对比...")
+print("Plotting Chart 2: Genre Comparison...")
 
 df = df[df['genre'] != 'Unknown']
-# 计算各自的题材分布（归一化为百分比）
+# Calculate genre distribution for each (normalized to percentage)
 short_genres = df[df['is_short']]['genre'].value_counts(normalize=True).head(10) * 100
 feature_genres = df[~df['is_short']]['genre'].value_counts(normalize=True).head(10) * 100
 
-# 合并数据
+# Merge data
 comp_df = pd.DataFrame({'Shorts': short_genres, 'Features': feature_genres})
-# 按短片流行度排序
+# Sort by Short Film popularity
 comp_df = comp_df.sort_values('Shorts', ascending=True)
 
-# 绘图
+# Plotting
 comp_df.plot(kind='barh', figsize=(12, 8), width=0.8, color=['#86d0cb', '#e88c7d'])
 
 plt.title(f'Genre Composition: Short Films (<{SHORT_THRESHOLD}m) vs Features', fontsize=16)
@@ -80,23 +80,23 @@ plt.tight_layout()
 plt.show()
 
 # ==========================================
-# 图表 3: 各题材内部的“短片渗透率”
-# 回答：Animation 里面到底有多少是短片？
+# Chart 3: "Short Film Penetration Rate" within each Genre
+# How many Animation movies are actually short films?
 # ==========================================
-print("正在绘制图表 3: 渗透率分析...")
+print("Plotting Chart 3: Penetration Analysis...")
 
-# 只看最热门的 15 个题材
+# Focus on the top 15 most popular genres
 top_15 = df['genre'].value_counts().head(15).index
 df_top = df[df['genre'].isin(top_15)]
 
-# 计算每个题材中 is_short 的平均值
+# Calculate the mean of 'is_short' for each genre
 penetration = df_top.groupby('genre')['is_short'].mean() * 100
 penetration = penetration.sort_values(ascending=False)
 
 plt.figure(figsize=(12, 6))
 bars = plt.bar(penetration.index, penetration.values, color='#4c72b0')
 
-# 红色高亮 > 50% 的题材
+# Highlight genres > 50% in red
 for bar in bars:
     if bar.get_height() > 50:
         bar.set_color('#d62728') 
@@ -111,4 +111,4 @@ plt.grid(axis='y', alpha=0.3)
 plt.tight_layout()
 plt.show()
 
-print("✅ 分析完成。")
+print("✅ Analysis Complete.")

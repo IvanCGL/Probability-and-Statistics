@@ -8,32 +8,31 @@ try:
     df = pd.read_csv(LOAD_DIR)
 
 except Exception as e:
-
     print(f"Load csv file fails.")
 
-# 1. 数据清洗
+# 1. Data Cleaning
 df_run = df.dropna(subset=['runtime', 'release_year']).copy()
-df_run = df_run[df_run['runtime'] > 0] # 剔除时长为0的错误数据
+df_run = df_run[df_run['runtime'] > 0] # Remove erroneous data where runtime is 0
 
-# 2. 关键步骤：创建“年代”列
+# 2. Key Step: Create 'decade' column
 df_run['decade'] = (df_run['release_year'] // 10) * 10
 
-# 3. 过滤年份（保持一致性，只看 1910 - 2025）
+# 3. Filter Years (Maintain consistency, focus on 1910 - 2020)
 df_run = df_run[(df_run['decade'] >= 1910) & (df_run['decade'] <= 2020)]
 
-# 4. 绘图
+# 4. Plotting
 plt.figure(figsize=(14, 8))
 
-# 使用 Seaborn 画箱线图
-# x=年代, y=时长
+# Use Seaborn to draw a boxplot
+# x=decade, y=runtime
 sns.boxplot(data=df_run, x='decade', y='runtime', 
-            palette="Blues",  # 使用渐变蓝色
-            width=0.6,        # 箱子宽度
-            showfliers=False) # 是否显示离群点
-                              # False = 不显示极端值（让图表更清晰，聚焦主流）
-                              # True = 显示所有黑点（可以看到那些 200分钟+ 的电影）
+            palette="Blues",  # Use gradient blue palette
+            width=0.6,        # Box width
+            showfliers=False) # Whether to show outliers
+                              # False = Hide extreme values (makes chart clearer, focuses on mainstream)
+                              # True = Show all points (allows seeing 200min+ movies)
 
-# 5. 添加辅助线和装饰
+# 5. Add auxiliary lines and decorations
 plt.axhline(y=90, color='r', linestyle='--', alpha=0.5, label='90 min (Standard)')
 plt.axhline(y=120, color='g', linestyle='--', alpha=0.5, label='120 min (Epic)')
 
@@ -43,8 +42,8 @@ plt.ylabel('Runtime (Minutes)', fontsize=12)
 plt.legend(loc='upper right')
 plt.grid(True, axis='y', alpha=0.3)
 
-# 限制 Y 轴范围（如果不隐藏离群点，这行很有用）
-# 大部分电影都在 300分钟以内，限制一下防止被个别 10小时的艺术片压缩画面
+# Limit Y-axis range (Useful if outliers are not hidden)
+# Most movies are under 300 mins; this limits the view to prevent rare 10-hour art films from compressing the visualization
 plt.ylim(0, 200) 
 
 plt.show()
